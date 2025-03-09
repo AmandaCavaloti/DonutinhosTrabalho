@@ -1,0 +1,55 @@
+﻿@model List<Pedido>
+
+<div class="container mt-4">
+    <!-- Título com a seta para voltar -->
+    <h2 class="fw-bold mb-4 d-flex align-items-center" style="color: #b04848; font-family: 'Arial', sans-serif;">
+        <a href="@Url.Action("Index", "Home")" class="text-decoration-none me-2">
+            <i class="fa-solid fa-arrow-left" style="color: #652818;"></i>
+        </a>
+        Lista de Pedidos
+    </h2>
+
+    @if (Model.Count == 0)
+    {
+        <div class="alert alert-warning text-center">
+            Nenhum pedido cadastrado.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table text-center border border-dark rounded-4 overflow-hidden" style="background-color: #FFEAEA;">
+                <thead class="border-bottom border-dark">
+                    <tr style="color: #652818;">
+                        <th class="p-3">ID do Pedido</th>
+                        <th>Data do Pedido</th>
+                        <th>Donuts</th>
+                        <th>Quantidade Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var pedido in Model)
+                    {
+                        <tr class="border-bottom border-dark">
+                            <td class="fw-bold p-3" style="color: #652818;">@pedido.Id</td>
+                            <td class="p-3" style="color: #652818;">@pedido.DataCadastro.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="p-3">
+                                <ul class="list-unstyled">
+                                    @foreach (var item in pedido.Itens)
+                                    {
+                                        <li class="fw-bold" style="color: #b04848;">
+                                            🍩 @item.Donut.Sabor - @item.Quantidade unidade(s)
+                                        </li>
+                                    }
+                                </ul>
+                            </td>
+                            <td class="fw-bold p-3" style="color: #652818;">
+                                @pedido.Itens.Sum(i => i.Quantidade)
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
