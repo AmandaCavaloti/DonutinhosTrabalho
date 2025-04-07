@@ -1,5 +1,10 @@
 ﻿@model List<Pedido>
 
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+
+
+
+
 <div class="container mt-4">
     <!-- Título com a seta para voltar -->
     <h2 class="fw-bold mb-4 d-flex align-items-center" style="color: #b04848; font-family: 'Arial', sans-serif;">
@@ -18,38 +23,205 @@
     else
     {
         <div class="table-responsive">
-            <table class="table text-center border border-dark rounded-4 overflow-hidden" style="background-color: #FFEAEA;">
-                <thead class="border-bottom border-dark">
-                    <tr style="color: #652818;">
-                        <th class="p-3">ID do Pedido</th>
-                        <th>Data do Pedido</th>
-                        <th>Donuts</th>
-                        <th>Quantidade Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var pedido in Model)
-                    {
-                        <tr class="border-bottom border-dark">
-                            <td class="fw-bold p-3" style="color: #652818;">@pedido.Id</td>
-                            <td class="p-3" style="color: #652818;">@pedido.DataCadastro.ToString("dd/MM/yyyy HH:mm")</td>
-                            <td class="p-3">
-                                <ul class="list-unstyled">
-                                    @foreach (var item in pedido.Itens)
-                                    {
-                                        <li class="fw-bold" style="color: #b04848;">
-                                            🍩 @item.Donut.Sabor - @item.Quantidade unidade(s)
-                                        </li>
-                                    }
-                                </ul>
-                            </td>
-                            <td class="fw-bold p-3" style="color: #652818;">
-                                @pedido.Itens.Sum(i => i.Quantidade)
-                            </td>
+            <div ng-app="PedidoApp" ng-controller="PedidoController">
+                <table class="table text-center border border-dark rounded-4 overflow-hidden" style="background-color: #FFEAEA;">
+                    <thead class="border-bottom border-dark">
+                        <tr style="color: #652818;">
+                            <th class="p-3">ID do Pedido</th>
+                            <th>Data do Pedido</th>
+                            <th>Donuts</th>
+                            <th>Quantidade Total</th>
+                            <th>Status</th>
+                            <th></th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var pedido in Model)
+                        {
+                            <tr class="border-bottom border-dark">
+                                <td class="fw-bold p-3" style="color: #652818;">@pedido.Id</td>
+                                <td class="p-3" style="color: #652818;">@pedido.DataCadastro.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="p-3">
+                                    <ul class="list-unstyled">
+                                        @foreach (var item in pedido.Itens)
+                                        {
+                                            <li class="fw-bold" style="color: #b04848;">
+                                                🍩 @item.Donut.Sabor - @item.Quantidade unidade(s)
+                                            </li>
+                                        }
+                                    </ul>
+                                </td>
+                                <td class="fw-bold p-3" style="color: #652818;">
+                                    @pedido.Itens.Sum(i => i.Quantidade)
+                                </td>
+                                <td class="fw-bold p-3" style="color: #652818;">
+                                    @(string.IsNullOrEmpty(pedido.Status) ? "Pendente" : pedido.Status)
+                                </td>
+                                <td class="">
+                                    <button style="color: #652818;" class="btn fw-bold" ng-click="abrirModal(@pedido.Id)">
+                                        <i class="fas fa-pen-to-square"></i>
+                                    </button>
+                                    <form method="post" action="/Pedido/Concluir" style="display: inline;">
+                                        <input type="hidden" name="id" value="@pedido.Id" />
+                                        <button type="submit" class="btn fw-bold" style="color: #652818;" title="Concluir pedido">
+                                            <i class="fas fa-check-square"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+
+
+                <div class="modal fade" id="modalEditarPedido" tabindex="-1" aria-labelledby="modalEditarPedidoLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <form method="post" action="/Pedido/Editar">
+                            @Html.AntiForgeryToken()
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" style="color: #652818;" id="modalEditarPedidoLabel">Editar Pedido #{{pedidoSelecionado.id}}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    <input type="hidden" name="Id" ng-value="pedidoSelecionado.id" />
+
+                                    <table class="table table-sm align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th style="color: #652818;width: 45%;">Sabor</th>
+                                                <th style="color: #652818;width: 30%;">Quantidade</th>
+                                                <th style="color: #652818;width: 5%;">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr ng-repeat="item in pedidoSelecionado.itens">
+                                                <td>
+                                                    <label class="form-control-plaintext">{{ item.donut.sabor }}</label>
+
+                                                    <!-- Enviar o ID do Item -->
+                                                    <input type="hidden" name="Itens[{{$index}}].Id" ng-value="item.id" />
+
+                                                    <!-- Enviar o DonutId -->
+                                                    <input type="hidden" name="Itens[{{$index}}].DonutId" ng-value="item.donutId || item.donut.id" />
+
+                                                    <!-- Enviar o PedidoId -->
+                                                    <input type="hidden" name="Itens[{{$index}}].PedidoId" ng-value="pedidoSelecionado.id" />
+
+                                                    <!-- (opcional) Enviar o sabor, se quiser usar no Controller -->
+                                                    <input type="hidden" name="Itens[{{$index}}].Sabor" ng-value="item.donut.sabor" />
+                                                </td>
+                                                <td>
+                                                    <input type="number"
+                                                           class="form-control"
+                                                           name="Itens[{{$index}}].Quantidade"
+                                                           ng-model="item.quantidade"
+                                                           min="1"
+                                                           required />
+                                                </td>
+                                                <td>
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-outline-danger"
+                                                            ng-click="removerItem($index)">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn w-25 mt-5 rounded-pill"
+                                            style="background-color: #652818; color: white;">
+                                        Salvar 
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+
+            </div>
         </div>
     }
 </div>
+
+
+<div class="modal fade" id="modalPedido" tabindex="-1" aria-labelledby="modalPedidoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background-color: #FFEAEA; border: 2px solid #652818; border-radius: 20px;">
+            <div class="modal-header" style="border-bottom: 2px solid #652818;">
+                <h5 class="modal-title fw-bold" id="modalPedidoLabel" style="color: #b04848; font-family: 'Arial', sans-serif;">
+                    Confirmação
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body text-center fw-bold" style="color: #652818;">
+                @TempData["Mensagem"]
+            </div>
+            <div class="modal-footer justify-content-center" style="border-top: 2px solid #652818;">
+                <button type="button" class="btn rounded-pill" data-bs-dismiss="modal"
+                        style="background-color: #b04848; color: white; width: 150px;">
+                    Fechar
+                </button>
+
+                @if (TempData["Mensagem"]?.ToString() == "Pedido enviado com sucesso!")
+                {
+                    <a href="@Url.Action("Index", "Pedido")" class="btn rounded-pill"
+                       style="background-color: #652818; color: white; width: 150px;">
+                        Ver Pedidos
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    angular.module("PedidoApp", [])
+        .controller("PedidoController", function ($scope) {
+            $scope.pedidos = @Html.Raw(Json.Serialize(Model)); // Carrega os pedidos do Razor para o Angular
+            $scope.pedidoSelecionado = null;
+            console.log("listaPedidos", $scope.pedidos)
+
+
+                $scope.removerItem = function (index) {
+        if ($scope.pedidoSelecionado && $scope.pedidoSelecionado.itens) {
+            $scope.pedidoSelecionado.itens.splice(index, 1);
+        }
+    };
+
+
+               $scope.abrirModal = function (id) {
+                    const pedido = $scope.pedidos.find(p => p.id === id);
+            console.log("id", id)
+            console.log("pedido", pedido)
+
+                    if (pedido) {
+                        $scope.pedidoSelecionado = angular.copy(pedido);
+            console.log("$scope.pedidoSelecionado", $scope.pedidoSelecionado)
+
+                        const modal = new bootstrap.Modal(document.getElementById('modalEditarPedido'));
+                        modal.show();
+                    } else {
+                        console.error("Pedido não encontrado com ID:", id);
+                    }
+                };
+        });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var modalPedido = new bootstrap.Modal(document.getElementById('modalPedido'));
+
+        // Se houver uma mensagem no TempData, abre o modal automaticamente
+        if ('@TempData["Mensagem"]' !== '') {
+            modalPedido.show();
+        }
+    });
+</script>
