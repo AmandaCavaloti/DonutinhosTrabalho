@@ -58,7 +58,7 @@
                     <!-- Campo para enviar o ID correto do Donut -->
                     <input type="hidden" name="Pedido.Itens[@i].DonutId" value="@Model[i].Id" />
                     <!-- Campo para enviar a quantidade -->
-                    <input type="text"  class="form-control text-center border-0 bg-transparent fw-bold"
+                    <input type="text" class="form-control text-center border-0 bg-transparent fw-bold"
                            name="Pedido.Itens[@i].Quantidade" value="0" min="0" style="width: 50px;">
 
                     <button type="button" class="btn  btn-sm" onclick="increaseQuantity(this)">
@@ -75,6 +75,11 @@
         <input type="submit" class="btn w-50 mt-5 rounded-pill"
                style="background-color: #652818; color: white;"
                value="Enviar Pedido" />
+        <a class="btn w-15 mt-5 rounded-pill"
+           style="background-color: #652818; color: white;" href="@Url.Action("Index", "Pedido")">
+            Ver Pedidos
+        </a>
+
     </div>
 
 </form>
@@ -88,7 +93,7 @@
         if ('@TempData["Mensagem"]' !== '') {
             modalPedido.show();
         }
-    }); v
+    });
 </script>
 <script>
     function increaseQuantity(button) {
