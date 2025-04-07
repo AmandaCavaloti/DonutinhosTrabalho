@@ -34,6 +34,7 @@ namespace EComerceDonutinhos.Controllers
             //Só cadastra os selecionados
             pedido.Itens = pedido.Itens.Where(i => i.Quantidade > 0).ToList();
             pedido.DataCadastro = DateTime.Now;
+            pedido.Status = "Pendente";
 
             _context.Pedidos.Add(pedido);
             _context.SaveChanges();
@@ -42,7 +43,7 @@ namespace EComerceDonutinhos.Controllers
             return RedirectToAction("Index");
         }
 
-
+       
         public IActionResult Privacy()
         {
             return View();
